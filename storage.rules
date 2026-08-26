@@ -1,0 +1,6 @@
+/*
+  Firebase Storage is intentionally not used by this project.
+  Product media is stored in Cloudinary.
+
+  This file is kept as documentation only.
+*/
