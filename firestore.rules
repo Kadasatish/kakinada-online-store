@@ -8,8 +8,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return signedIn()
-        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'admin';
+      return signedIn() && request.auth.token.admin == true;
     }
 
     match /products/{productId} {
@@ -30,7 +29,7 @@ service cloud.firestore {
     }
 
     match /admins/{uid} {
-      // An authenticated user may read only their own admin profile.
+      // Admin status comes from the Firebase Auth custom claim.
       // Client-side writes are disabled so users cannot grant themselves admin.
       allow read: if signedIn() && request.auth.uid == uid;
       allow write: if false;
