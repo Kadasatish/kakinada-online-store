@@ -1,18 +1,36 @@
-import { getIdTokenResult, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { auth } from "./firebase.js";
+import { doc, getDoc } from "firebase/firestore";
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { auth, db } from "./firebase.js";
+
+export async function getAdminProfile(user) {
+  if (!user || !db) return null;
+
+  const snapshot = await getDoc(doc(db, "admins", user.uid));
+  if (!snapshot.exists()) return null;
+
+  const data = snapshot.data();
+  if (data?.role !== "admin") return null;
+
+  return {
+    uid: user.uid,
+    email: user.email || "",
+    role: data.role,
+    storeId: data.storeId || null
+  };
+}
 
 export async function signInAdmin(email, password) {
   if (!auth) throw new Error("Firebase Authentication is not configured.");
 
   const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
-  const token = await getIdTokenResult(credential.user, true);
+  const profile = await getAdminProfile(credential.user);
 
-  if (token.claims.admin !== true) {
+  if (!profile) {
     await signOut(auth);
     throw new Error("This account is not authorized as an admin.");
   }
 
-  return credential.user;
+  return { user: credential.user, profile };
 }
 
 export function watchAuth(callback) {
@@ -29,7 +47,5 @@ export function logout() {
 }
 
 export async function isAdmin(user) {
-  if (!user) return false;
-  const token = await getIdTokenResult(user, true);
-  return token.claims.admin === true;
+  return Boolean(await getAdminProfile(user));
 }
