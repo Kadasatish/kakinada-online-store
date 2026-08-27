@@ -4,10 +4,11 @@ import { Link, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { products } from "./data/products.js";
 import { useCart } from "./hooks/useCart.js";
 import { createOrder, getLocalOrders } from "./services/orders.js";
+import AdminPage from "./admin/AdminPage.jsx";
 
 function App() {
   const cart = useCart();
-  return <CartContextProvider value={cart}><StoreApp /></CartContextProvider>;
+  return <CartContextProvider value={cart}><Routes><Route path="/admin/*" element={<AdminPage />} /><Route path="*" element={<StoreApp />} /></Routes></CartContextProvider>;
 }
 
 function StoreApp() {
