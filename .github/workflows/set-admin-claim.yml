@@ -1,0 +1,39 @@
+name: Set Admin Claim
+
+on:
+  workflow_dispatch:
+    inputs:
+      admin_email:
+        description: "Firebase Authentication email to authorize as admin"
+        required: true
+        type: string
+
+jobs:
+  set-admin-claim:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Set Firebase admin custom claim
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          ADMIN_EMAIL: ${{ inputs.admin_email }}
+        run: |
+          npm install --no-save firebase-admin
+          node --input-type=module <<'NODE'
+          import { cert, getApps, initializeApp } from 'firebase-admin/app';
+          import { getAuth } from 'firebase-admin/auth';
+
+          const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+          const app = getApps().length
+            ? getApps()[0]
+            : initializeApp({ credential: cert(serviceAccount) });
+
+          const auth = getAuth(app);
+          const email = process.env.ADMIN_EMAIL.trim();
+          const user = await auth.getUserByEmail(email);
+          const claims = { ...(user.customClaims || {}), admin: true };
+
+          await auth.setCustomUserClaims(user.uid, claims);
+          console.log(`Admin claim set successfully for Firebase user ${user.uid}.`);
+          NODE
