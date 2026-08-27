@@ -34,14 +34,14 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
         run: npm run build
 
-      - name: Deploy Firestore rules and Hosting
+      - name: Deploy Hosting only
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
           npm install --no-save firebase-tools
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-service-account.json"
-          npx firebase deploy --only firestore:rules,hosting --project kakinada-online-store --non-interactive
+          npx firebase deploy --only hosting --project kakinada-online-store --non-interactive
 
       - name: Remove service account file
         if: always()
