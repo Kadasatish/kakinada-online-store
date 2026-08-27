@@ -1,21 +1,17 @@
-import { doc, getDoc } from "firebase/firestore";
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { auth, db } from "./firebase.js";
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut, getIdTokenResult } from "firebase/auth";
+import { auth } from "./firebase.js";
 
 export async function getAdminProfile(user) {
-  if (!user || !db) return null;
+  if (!user || !auth) return null;
 
-  const snapshot = await getDoc(doc(db, "admins", user.uid));
-  if (!snapshot.exists()) return null;
-
-  const data = snapshot.data();
-  if (data?.role !== "admin") return null;
+  const token = await getIdTokenResult(user, true);
+  if (token.claims?.admin !== true) return null;
 
   return {
     uid: user.uid,
     email: user.email || "",
-    role: data.role,
-    storeId: data.storeId || null
+    role: "admin",
+    storeId: token.claims?.storeId || null
   };
 }
 
